@@ -15,13 +15,18 @@ class MyApp extends StatefulWidget {
 
 class _MyAppState extends State<MyApp> {
   int times = 1 * 60;
+  late Timer timer;
 
   void timeStart() {
-    Timer timer = Timer.periodic(const Duration(seconds: 1), (timer) {
+    timer = Timer.periodic(const Duration(seconds: 1), (timer) {
       setState(() {
         print(times--);
       });
     });
+  }
+
+  void timeStop() {
+    timer.cancel();
   }
 
   @override
