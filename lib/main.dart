@@ -14,23 +14,60 @@ class MyApp extends StatefulWidget {
 }
 
 class _MyAppState extends State<MyApp> {
-  int times = 1 * 60;
+  int times = 60;
   late Timer timer;
+  String timeView = '0:00:00';
+  bool isRunning = false;
 
   void timeStart() {
-    timer = Timer.periodic(const Duration(seconds: 1), (timer) {
+    if (isRunning) {
+      timeStop();
       setState(() {
-        print(times--);
+        isRunning = !isRunning;
       });
-    });
+    } else {
+      setState(() {
+        isRunning = !isRunning;
+      });
+      timer = Timer.periodic(const Duration(seconds: 1), (timer) {
+        //Timer.주기 Duration = 시간 명령어
+        setState(() {
+          timeView = Duration(seconds: times).toString().split('.').first;
+          times--;
+          if (times < 0) {
+            timeStop();
+            isRunning = !isRunning;
+          }
+        });
+      });
+    }
   }
 
   void timeStop() {
     timer.cancel();
   }
 
+  void tiemReset() {
+    setState(() {
+      if (timer == null) timeStop();
+      isRunning = false;
+      timeStop();
+      times = 60;
+      timeView = Duration(seconds: times).toString().split('.').first;
+    });
+  }
+
+  void addTime(int sec) {
+    times += sec;
+    times = times < 0 ? 0 : times;
+    setState(() {
+      timeView = Duration(seconds: times).toString().split('.').first;
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
+    timeView = Duration(seconds: times).toString().split('.').first;
     return MaterialApp(
       home: Scaffold(
         body: Column(children: [
@@ -48,14 +85,33 @@ class _MyAppState extends State<MyApp> {
                 ),
               )),
           Flexible(
-              flex: 3,
+              flex: 1,
+              child: Container(
+                color: Colors.cyan,
+                width: double.infinity,
+                height: double.infinity,
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceAround,
+                  children: [
+                    timeButton(sec: 60, color: Colors.cyan),
+                    timeButton(
+                        sec: 30, color: const Color.fromARGB(255, 0, 119, 134)),
+                    timeButton(
+                        sec: -60, color: const Color.fromARGB(255, 0, 71, 80)),
+                    timeButton(
+                        sec: -30, color: const Color.fromARGB(255, 0, 47, 53)),
+                  ],
+                ),
+              )),
+          Flexible(
+              flex: 2,
               child: Container(
                 width: double.infinity,
                 height: double.infinity,
                 color: Colors.blue,
                 child: Center(
                   child: Text(
-                    '$times',
+                    timeView,
                     style: const TextStyle(fontSize: 50),
                   ),
                 ),
@@ -70,14 +126,24 @@ class _MyAppState extends State<MyApp> {
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      IconButton(
-                        onPressed: timeStart,
-                        icon: const Icon(Icons.play_arrow_rounded),
-                        iconSize: 50,
+                      if (isRunning)
+                        IconButton(
+                          onPressed: timeStart,
+                          icon: const Icon(Icons.pause_circle_rounded),
+                          iconSize: 50,
+                        )
+                      else if (!isRunning)
+                        IconButton(
+                          onPressed: timeStart,
+                          icon: const Icon(Icons.play_circle_rounded),
+                          iconSize: 50,
+                        ),
+                      const SizedBox(
+                        width: 20,
                       ),
-                      const IconButton(
-                        onPressed: null,
-                        icon: Icon(Icons.play_circle_rounded),
+                      IconButton(
+                        onPressed: tiemReset,
+                        icon: const Icon(Icons.restore_rounded),
                         iconSize: 50,
                       )
                     ],
@@ -85,6 +151,18 @@ class _MyAppState extends State<MyApp> {
                 ),
               )),
         ]),
+      ),
+    );
+  }
+
+  GestureDetector timeButton({required int sec, required Color color}) {
+    return GestureDetector(
+      onTap: () => addTime(sec),
+      child: Container(
+        width: 100,
+        height: 100,
+        decoration: BoxDecoration(shape: BoxShape.circle, color: color),
+        child: Center(child: Text('$sec')),
       ),
     );
   }
